@@ -1,0 +1,98 @@
+---
+- name: Install httpd
+  become: true
+  dnf:
+    name: httpd
+    state: present
+#    update_cache: yes
+#    cache_valid_time: 3600
+
+- name: Systemctl enable httpd
+  become: true
+  service:
+    name: httpd
+    enabled: true
+    state: started
+
+- name: Document root permission
+  become: true
+  file:
+    path: /var/www
+    state: directory
+    owner: apache
+    group: apache
+    recurse: true
+    mode: "0775"
+
+- name: User-control
+  become: true
+  user:
+    name: "{{ item.value.name }}"
+    groups: "{{ item.value.groups }}"
+    group: "{{ item.value.group }}"
+    state: "{{ item.value.state }}"
+    remove: "{{ item.value.remove }}"
+    create_home: "{{ item.value.create_home }}"
+    password: "{{ item.value.password }}"
+    shell: "{{ item.value.login_shell }}"
+    comment: "{{ item.value.comment }}"
+    expires: "{{ item.value.expires }}"
+  # changed_when: False
+  with_dict: "{{ httpd_users }}"
+  when: httpd_users is defined
+
+- name: Set public-key
+  become: true
+  ansible.posix.authorized_key:
+    user: "{{ item.value.name }}"
+    state: "{{ item.value.state }}"
+    key: "{{ lookup('file', '{{ item.value.public_key }}') }}"
+  with_dict: "{{ httpd_users }}"
+  when: httpd_users is defined
+
+- name: Set secret-key
+  become: true
+  copy:
+    content: "{{ lookup('file', '{{ item.value.secret_key }}') }}"
+    dest: "/home/{{ item.value.name }}/.ssh/id_rsa"
+    owner: "{{ item.value.name }}"
+    group: "{{ item.value.group }}"
+    mode: '600'
+  with_dict: "{{ httpd_users }}"
+  when:
+    - httpd_users is defined
+    - item.value.secret_key is defined
+    - item.value.create_home == 'yes'
+
+- name: Add sudo authorize
+  become: true
+  lineinfile:
+    dest: /etc/sudoers
+    backup: true
+    line: "{{ item.value.name }} ALL=(ALL) NOPASSWD: ALL"
+  when:
+    - httpd_users is defined
+    - item.value.sudo == 'present'
+  with_dict: "{{ httpd_users }}"
+
+- name: Open service by firewalld
+  become: true
+  ansible.posix.firewalld:
+    zone: "{{ item.zone }}"
+    service: "{{ item.service }}"
+    permanent: "{{ item.permanent }}"
+    state: "{{ item.state }}"
+    immediate: "{{ item.immediate }}"
+  with_items: "{{ firewalld_service }}"
+  when: firewalld_service is defined
+  notify: Restart firewalld
+
+- name: Open port by firewalld
+  become: true
+  ansible.posix.firewalld:
+    port: "{{ item.port }}"
+    permanent: "{{ item.permanent }}"
+    state: "{{ item.state }}"
+  with_items: "{{ firewalld_ports }}"
+  when: firewalld_ports is defined
+  notify: Restart firewalld
