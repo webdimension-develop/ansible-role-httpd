@@ -7,12 +7,12 @@ firewalld_ports:
     permanent: "yes"
     state: "enabled"
 
-# firewalld_service:
-#  - service: 'httpd'
-#    zone: 'public'
-#    permanent: 'yes'
-#    state: 'enabled'
-#    immediate: true
+firewalld_service:
+ - service: 'http'
+   zone: 'public'
+   permanent: 'yes'
+   state: 'enabled'
+   immediate: true
 
 httpd_users:
   web_worker_001:

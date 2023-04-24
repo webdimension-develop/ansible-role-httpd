@@ -1,2 +1,13 @@
 ---
 # handlers file for src/roles/httpd
+- name: Restart httpd
+  service:
+    name: httpd
+    state: restarted
+
+- name: Restart firewalld
+  become: true
+  systemd:
+    state: restarted
+    name: firewalld
+    enabled: true
