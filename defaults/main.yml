@@ -8,22 +8,25 @@ httpd_firewalld_ports:
     state: "enabled"
 
 httpd_firewalld_service:
- - service: 'http'
-   zone: 'public'
-   permanent: 'yes'
-   state: 'enabled'
-   immediate: true
+  - service: 'http'
+    zone: 'public'
+    permanent: 'yes'
+    state: 'enabled'
+    immediate: true
+
+httpd_master_user_name: 'web-worker-001'
 
 httpd_users:
   web-worker-001:
-    name: 'web-worker-001'
-    groups: 'nginx'
-    group: 'nginx'
+    name: "{{ httpd_master_user_name }}"
+    groups: 'apache'
+    group: 'apache'
     append: 'yes'
     state: 'present'
     remove: 'no'
     password: "{{ secret.general_users.master_user.password }}"
     public_key: "/root/.ssh/ansible_rsa.pub"
+    secret_key: "/root/.ssh/id_rsa"
     login_shell: '/bin/bash'
     create_home: 'yes'
     sudo: 'absent'
@@ -31,15 +34,22 @@ httpd_users:
     expires: '-1'
   web-worker-002:
     name: 'web-worker-002'
-    groups: 'nginx'
-    group: 'nginx'
+    groups: 'apache'
+    group: 'apache'
     append: 'no'
     state: 'present'
     remove: 'yes'
     password: "{{ secret.general_users.master_user.password }}"
     public_key: "/root/.ssh/ansible_rsa.pub"
+    secret_key: "/root/.ssh/id_rsa"
     login_shell: '/bin/bash'
     create_home: 'yes'
     sudo: 'absent'
     comment: 'web002'
     expires: '-1'
+
+httpd_git_clone: true
+httpd_git_clone_repository_url: "{{ secret.httpd_git_clone.git_repository_url }}"
+httpd_git_clone_dest: "/var/www/html/"
+httpd_document_root: "{{ httpd_git_clone_dest }}/public"
+httpd_fqdn: "{{ secret.httpd_fqdn }}"

@@ -75,6 +75,18 @@
     - item.value.sudo == 'present'
   with_dict: "{{ httpd_users }}"
 
+
+- name: httpd.conf
+  become: true
+  template:
+    src: vhosts.conf.j2
+    dest: /etc/httpd/conf.d/vhosts.conf
+  vars:
+    document_root: "{{ httpd_document_root }}"
+    fqdn: "{{ httpd_fqdn }}"
+  notify:
+    - Restart httpd
+
 - name: Open service by firewalld
   become: true
   ansible.posix.firewalld:
@@ -96,3 +108,33 @@
   with_items: "{{ httpd_firewalld_ports }}"
   when: httpd_firewalld_ports is defined
   notify: Restart firewalld
+
+- name: Check cloned
+  become: true
+  stat:
+    path: "{{ httpd_document_root }}"
+  register: chk_cloned
+  changed_when: false
+  ignore_errors: true
+  when:
+    - nginx_git_clone is true
+
+- name: Install git
+  become: true
+  dnf:
+    name: 'git'
+    state: present
+
+- name: git clone
+  become: true
+  become_user: "{{ httpd_master_user_name }}"
+  ansible.builtin.git:
+    repo: "{{ httpd_git_clone_repository_url }}"
+    dest: "{{ httpd_document_root }}"
+    key_file: "/home/{{ httpd_master_user_name }}/.ssh/id_rsa"
+    accept_hostkey: true
+  when:
+    - chk_cloned.stat.exists is false
+    - httpd_git_clone is true
+  notify:
+    - Restart httpd
