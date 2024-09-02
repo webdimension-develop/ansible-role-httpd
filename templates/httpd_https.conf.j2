@@ -1,0 +1,14 @@
+<VirtualHost *:443>
+DocumentRoot {{ httpd_document_root }}
+ServerName {{ httpd_fqdn }}
+<Directory "{{ httpd_document_root }}">
+allow from all
+Options +Indexes
+</Directory>
+SSLEngine on
+SSLCertificateFile /etc/pki/tls/certs/{{ httpd_fqdn }}/{{ httpd_fqdn }}.crt
+SSLCertificateKeyFile /etc/pki/tls/certs/{{ httpd_fqdn }}/{{ httpd_fqdn }}.key
+# SSLCertificateChainFile /etc/pki/tls/certs/{{ httpd_fqdn }}/{{ httpd_fqdn }}.chain
+# ErrorLog /var/log/httpd/{{ httpd_fqdn }}/error_log
+# CustomLog /var/log/httpd/{{ httpd_fqdn }}/access_log combined
+</VirtualHost>

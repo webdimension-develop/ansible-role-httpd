@@ -50,6 +50,9 @@ httpd_users:
 
 httpd_git_clone: true
 httpd_git_clone_repository_url: "{{ secret.httpd_git_clone.git_repository_url }}"
-httpd_git_clone_dest: "/var/www/html/"
+httpd_git_clone_dest: "/var/www/html"
 httpd_document_root: "{{ httpd_git_clone_dest }}/public"
 httpd_fqdn: "{{ secret.httpd_fqdn }}"
+
+httpd_ssl: true
+httpd_ssl_email: "{{ secret.letsencrypt.email }}"
