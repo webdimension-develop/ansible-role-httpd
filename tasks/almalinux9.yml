@@ -143,6 +143,21 @@
 #########################################
 # let's encrypt
 #########################################
+- name: Restart Nginx
+  become: true
+  service:
+    name: httpd
+    state: restarted
+  when:
+    - httpd_ssl is true
+
+- name: Restart Firewalld
+  become: true
+  service:
+    name: firewalld
+    state: restarted
+  when:
+    - httpd_ssl is true
 
 - name: Install openssl
   become: true
@@ -281,17 +296,3 @@
   notify: Restart httpd
   when:
     - httpd_ssl is true
-
-- name: cron update certs
-  become: true
-  cron:
-    name: "let's encrypt"
-    minute: "00"
-    hour: "6"
-    day:  "*"
-    month: "*"
-    weekday: "*"
-    job: "/usr/bin/certbot renew --post-hook '/usr/bin/systemctl restart /usr/sbin/httpd'"
-    disabled: "no"
-  when:
-    - nginx_ssl is true

@@ -5,6 +5,10 @@ ServerName {{ httpd_fqdn }}
 allow from all
 Options +Indexes
 </Directory>
+<Location /.well-known/acme-challenge/>
+  Require all granted
+</Location>
+
 SSLEngine on
 SSLCertificateFile /etc/pki/tls/certs/{{ httpd_fqdn }}/{{ httpd_fqdn }}.crt
 SSLCertificateKeyFile /etc/pki/tls/certs/{{ httpd_fqdn }}/{{ httpd_fqdn }}.key
