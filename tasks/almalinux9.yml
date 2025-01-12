@@ -13,6 +13,8 @@
     name: httpd
     enabled: true
     state: started
+  async: 1000
+  poll: 1
 
 - name: Document root permission
   become: true
@@ -125,6 +127,8 @@
   dnf:
     name: 'git'
     state: present
+  async: 1000
+  poll: 1
 
 - name: git clone
   become: true
@@ -139,6 +143,8 @@
     - httpd_git_clone is true
   notify:
     - Restart httpd
+  async: 1000
+  poll: 1
 
 #########################################
 # let's encrypt
@@ -181,6 +187,8 @@
     name: cryptography
   when:
     - httpd_ssl is true
+  async: 1000
+  poll: 1
 
 - name: Create directory
   become: true
@@ -255,6 +263,8 @@
   when:
    - acme_challenge is changed and httpd_fqdn in acme_challenge['challenge_data']
    - httpd_ssl is true
+  async: 1000
+  poll: 1
 
 - name: Let the challenge be validated and retrieve the cert and intermediate certificate
   become: true
@@ -270,6 +280,8 @@
     - acme_challenge is changed
     - httpd_ssl is true
   notify: Restart firewalld
+  async: 1000
+  poll: 1
 
 - name: Permit traffic in default zone for https/http
   become: true
